@@ -35,7 +35,7 @@ if __name__ == "__main__":
             average_time = average_time * 0.8 + (end_time-start_time) * 0.2
             # Frames per second can be calculated as 1 frame divided by time required to process 1 frame
             fps = 1 / (end_time - start_time)
-            
+
             print("FPS: ", fps)
             print("Total Time:", end_time-start_time, ":", average_time)
 
@@ -50,5 +50,5 @@ if __name__ == "__main__":
         k = cv2.waitKey(1)
         if k == 0xFF & ord("q"):
             break
-    
+
     cap.release()

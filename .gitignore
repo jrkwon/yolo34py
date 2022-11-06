@@ -15,6 +15,7 @@ cfg/*.data
 cfg/*.cfg
 
 weights/*.weights
+yolo/weights/*.weights
 
 pydarknet.cpp
 pydarknet.c

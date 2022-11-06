@@ -1,4 +1,5 @@
 import time
+import os
 import argparse
 import numpy as np
 import cv2
@@ -18,6 +19,8 @@ def parse_args():
                         help='weights: regular, tiny', default='regular')
     parser.add_argument('-n', '--noshow', action = 'store_true',
                         help='Not showing video', default=False)
+    parser.add_argument("-y", "--yolo", default='../yolo', 
+                        help="base path to YOLO directory")
     
     return parser.parse_args()
 
@@ -26,8 +29,9 @@ def parse_args():
 def main(args):
 
     # load the COCO class labels our YOLO model was trained on
-    labelsPath = 'data/coco.names'
-    LABELS = open(labelsPath).read().strip().split("\n")
+    labels_path = os.path.sep.join([args.yolo, 'data/coco.names'])
+    print(labels_path)
+    LABELS = open(labels_path).read().strip().split("\n")
     
     # initialize a list of colors to represent each possible class label
     np.random.seed(42)
@@ -66,15 +70,18 @@ def main(args):
     average_time = 0
 
     if args.weight == 'regular':
-        net = pydarknet.Detector(bytes("cfg/yolov3.cfg", encoding="utf-8"), 
-                                 bytes("weights/yolov3.weights", encoding="utf-8"), 
-                                 0,
-                                 bytes("cfg/coco.data", encoding="utf-8"))
+        weights_path = os.path.sep.join([args.yolo, "weights/yolov3.weights"])
+        config_path = os.path.sep.join([args.yolo, "cfg/yolov3.cfg"])        
     else: # tiny
-        net = pydarknet.Detector(bytes("cfg/yolov3-tiny.cfg", encoding="utf-8"), 
-                                 bytes("weights/yolov3-tiny.weights", encoding="utf-8"), 
-                                 0,
-                                 bytes("cfg/coco.data", encoding="utf-8"))
+        weights_path = os.path.sep.join([args.yolo, "weights/yolov3-tiny.weights"])
+        config_path = os.path.sep.join([args.yolo, "cfg/yolov3-tiny.cfg"])        
+    
+    coco_data_path = os.path.sep.join([args.yolo, "cfg/coco.data"])  
+        
+    net = pydarknet.Detector(bytes(config_path, encoding="utf-8"), 
+                             bytes(weights_path, encoding="utf-8"), 
+                             0, 
+                             bytes(coco_data_path, encoding="utf-8"))
 
     while True:
         r, frame = cap.read()

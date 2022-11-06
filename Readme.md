@@ -12,13 +12,15 @@ This repo is designed to simplify `YOLO3-4-Py` installation. A few scripts is al
   - `$ git clone https://github.com/jrkwon/yolo34py.git`
   - `$ cd yolo34py`
 * Create a conda env. 
-  - `$ conda create --name yolo34py --file requirements.txt`
+  - `$ conda env create -f environment.yaml`
 * Activate the conda env.
   - `$ conda activate yolo34py`
 * Install `yolo34py-gpu`
   - `(yolo34py) $ pip install yolo34py-gpu`
   - Note: if you see `cuda_common.h not found` error during this installation, install `cuda` using `conda`
     - `(yolo34py) $ conda install cuda -c nvidia`
+    - Then, retry the installation.
+    - `(yolo34py) $ pip install yolo34py-gpu`
 * Download YOLO weights and config files. 
   - `(yolo34py) $ sh tools/download_models_ex.sh`
 * Change directory to `scripts`

@@ -10,6 +10,7 @@ This repo is designed to simplify `YOLO3-4-Py` installation. A few scripts is al
 ## How to Start
 * git clone this repo
   - `$ git clone https://github.com/jrkwon/yolo34py.git`
+  - `$ cd yolo34py`
 * Create a conda env. 
   - `$ conda install --name yolo34py --file requirements.txt`
 * Activate the conda env.

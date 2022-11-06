@@ -12,7 +12,7 @@ This repo is designed to simplify `YOLO3-4-Py` installation. A few scripts is al
   - `$ git clone https://github.com/jrkwon/yolo34py.git`
   - `$ cd yolo34py`
 * Create a conda env. 
-  - `$ conda install --name yolo34py --file requirements.txt`
+  - `$ conda create --name yolo34py --file requirements.txt`
 * Activate the conda env.
   - `$ conda activate yolo34py`
 * Install `yolo34py-gpu`

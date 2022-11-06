@@ -18,8 +18,8 @@ This repo is designed to simplify `YOLO3-4-Py` installation. A few scripts is al
     - `(yolo34py) $ conda install cuda -c nvidia`
 * Download YOLO weights and config files. 
   - `(yolo34py) $ sh tools/download_models_ex.sh`
-* Change directory to `script`
-  - `(yolo34py) $ cd script`
+* Change directory to `scripts`
+  - `(yolo34py) $ cd scripts`
 
 ## Webcam Version
 * `(yolo34py) $ python webcam.py`
@@ -27,6 +27,9 @@ This repo is designed to simplify `YOLO3-4-Py` installation. A few scripts is al
 ## Video File Version
 * `(yolo34py) $ python video.py -i <input-video-file-path> -o <output-video-file-path>`
 
+## Troubleshooting
+* If the symblic link `data` inside `scripts` is not valid, then recreate it. Make sure your current working directory is `scripts`
+  - `(yolo34py) $ ln ../yolo/data data`
 
 ----
 # YOLO3-4-Py

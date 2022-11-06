@@ -3,35 +3,45 @@ import argparse
 import numpy as np
 import cv2
 
-from pydarknet import Detector, Image
+import pydarknet
 
-
-# BGR format
-BOX_COLOR = (0, 255, 255)
-TEXT_COLOR = (0, 255, 128)
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Process a video.')
-    parser.add_argument('-c', '--camera', type=int, help='camera id number', default=0)
     parser.add_argument('-i', '--input', metavar='input_video_path', type=str,
-                        help='Path to source video')
+                        help='Path to source video', required=True)
     parser.add_argument('-o', '--output', metavar='output_video_path', type=str,
                         help='Path to destination video')
-
+    parser.add_argument("-c", "--confidence", type=float, default=0.5, 
+                        help ="Minimum probability to filter weak detections")
+    parser.add_argument('-w', '--weight', type=str, 
+                        help='weights: regular, tiny', default='regular')
+    parser.add_argument('-n', '--noshow', action = 'store_true',
+                        help='Not showing video', default=False)
+    
     return parser.parse_args()
 
 
 
 def main(args):
-    print("Source Path:", args.input)
-    print("Destination Path:", args.output)
+
+    # load the COCO class labels our YOLO model was trained on
+    labelsPath = 'data/coco.names'
+    LABELS = open(labelsPath).read().strip().split("\n")
+    
+    # initialize a list of colors to represent each possible class label
+    np.random.seed(42)
+    COLORS = np.random.randint(0, 255, size=(len(LABELS), 3), dtype="uint8")
+
+    print("[INFO] Source Path:", args.input)
+    print("[INFO] Destination Path:", args.output)
     cap = cv2.VideoCapture(args.input)
 
     #########################################
     # logo
     # Read logo and resize
     logo = cv2.imread('bimi_m_200x40.png')
-    scale = 1.5
+    scale = 1
     MARGIN_X = MARGIN_Y = 15
     logo_size = (int(scale*200), int(scale*40))
     logo = cv2.resize(logo, logo_size)
@@ -48,14 +58,23 @@ def main(args):
     # Below VideoWriter object will create
     # a frame of above defined The output
     # is stored in 'filename.avi' file.
-    result = cv2.VideoWriter(args.output,
-                             cv2.VideoWriter_fourcc(*'MJPG'),
-                             10, size)
+    if args.output is not False:
+        writer = cv2.VideoWriter(args.output,
+                                 cv2.VideoWriter_fourcc(*'MJPG'),
+                                 10, size)
 
     average_time = 0
 
-    net = Detector(bytes("cfg/yolov3.cfg", encoding="utf-8"), bytes("weights/yolov3.weights", encoding="utf-8"), 0,
-                   bytes("cfg/coco.data", encoding="utf-8"))
+    if args.weight == 'regular':
+        net = pydarknet.Detector(bytes("cfg/yolov3.cfg", encoding="utf-8"), 
+                                 bytes("weights/yolov3.weights", encoding="utf-8"), 
+                                 0,
+                                 bytes("cfg/coco.data", encoding="utf-8"))
+    else: # tiny
+        net = pydarknet.Detector(bytes("cfg/yolov3-tiny.cfg", encoding="utf-8"), 
+                                 bytes("weights/yolov3-tiny.weights", encoding="utf-8"), 
+                                 0,
+                                 bytes("cfg/coco.data", encoding="utf-8"))
 
     while True:
         r, frame = cap.read()
@@ -64,7 +83,7 @@ def main(args):
 
             # Only measure the time taken by YOLO and API Call overhead
 
-            dark_frame = Image(frame)
+            dark_frame = pydarknet.Image(frame)
             results = net.detect(dark_frame)
             del dark_frame
 
@@ -73,15 +92,24 @@ def main(args):
             # Frames per second can be calculated as 1 frame divided by time required to process 1 frame
             fps = 1 / (end_time - start_time)
 
-            print("FPS: ", fps)
-            print("Total Time:", end_time-start_time, ":", average_time)
+            print(f"[INFO] FPS: {fps:2.4f}, Total Time: {end_time-start_time:.4f}: {average_time:.4f}")
 
             for cat, score, bounds in results:
-                x, y, w, h = bounds
-                cv2.rectangle(frame, (int(x-w/2),int(y-h/2)),(int(x+w/2),int(y+h/2)), BOX_COLOR)
-                cat_score = f'{cat}:{score:.2f}'
-                cv2.putText(frame, cat_score, (int(x-w/2+5),int(y-h/2+15)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, TEXT_COLOR)
+                if score < args.confidence:
+                    continue
 
+                cx, cy, w, h = bounds
+                x, y = int(cx - w/2), int(cy - h/2)
+                width, height = int(w), int(h)
+
+    			# draw a bounding box rectangle and label on the frame
+                color = [int(c) for c in COLORS[LABELS.index(cat)]]
+
+                cv2.rectangle(frame, (x, y), (x + width, y + height), color, 2)
+                cat_score = f'{cat}: {score:.4f}'
+                cv2.putText(frame, cat_score, (x, y - 5), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+            # ----------------------------------------------------------------- 
             # logo
             # Create a mask of logo
             img2gray = cv2.cvtColor(logo, cv2.COLOR_BGR2GRAY)
@@ -91,8 +119,11 @@ def main(args):
             roi[np.where(mask)] = 0
             roi += logo
 
-            result.write(frame)
-            cv2.imshow("preview", frame)
+            if writer: 
+                writer.write(frame)
+
+            if not args.noshow:
+                cv2.imshow("Video", frame)
 
         else:
             break
@@ -101,6 +132,8 @@ def main(args):
         if k == 0xFF & ord("q"):
             break
 
+    if writer: 
+        writer.release()
     cap.release()
 
 
